@@ -9,7 +9,6 @@
     "test": "karma start --single-run",
     "dev-test": "karma start",
     "postinstall": "mkdir ./lib && cp -rp ./src/* ./lib/"
-"
   },
   "author": "Kiran Abburi",
   "license": "MIT",
