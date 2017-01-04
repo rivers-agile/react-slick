@@ -270,16 +270,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setState({
 	      mounted: true
 	    });
-	    var lazyLoadedList = [];
-	    for (var i = 0; i < _react2.default.Children.count(this.props.children); i++) {
-	      if (i >= this.state.currentSlide && i < this.state.currentSlide + this.props.slidesToShow) {
-	        lazyLoadedList.push(i);
-	      }
-	    }
 
-	    if (this.props.lazyLoad && this.state.lazyLoadedList.length === 0) {
+	    if (this.props.lazyLoad) {
+	      var lazyLoadedList = [];
+
+	      for (var i = 0; i < _react2.default.Children.count(this.props.children); i++) {
+	        if (i >= this.state.currentSlide && i < this.state.currentSlide + this.props.slidesToShow) {
+	          lazyLoadedList.push(i);
+	        }
+	      }
+
 	      this.setState({
-	        lazyLoadedList: lazyLoadedList
+	        lazyLoadedList: this.getLazyLoadedList(this.state.currentSlide, lazyLoadedList)
 	      });
 	    }
 	  },
@@ -312,6 +314,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  },
 	  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+	    console.log('receieving props');
+	    // lazyLoad
+	    if (nextProps.lazyLoad && nextProps.preLoad != this.props.preLoad) {
+	      this.setState({
+	        lazyLoadedList: this.getLazyLoadedList(this.state.currentSlide, null, nextProps)
+	      });
+	    }
+
 	    if (this.props.slickGoTo != nextProps.slickGoTo) {
 	      if ((undefined) !== 'production') {
 	        console.warn('react-slick deprecation warning: slickGoTo prop is deprecated and it will be removed in next release. Use slickGoTo method instead');
@@ -343,9 +353,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  },
 	  slickPrev: function slickPrev() {
+	    console.log('prev');
 	    this.changeSlide({ message: 'previous' });
 	  },
 	  slickNext: function slickNext() {
+	    console.log('next');
 	    this.changeSlide({ message: 'next' });
 	  },
 	  slickGoTo: function slickGoTo(slide) {
@@ -499,12 +511,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Event handler for previous and next
 	  changeSlide: function changeSlide(options) {
 	    var indexOffset, previousInt, slideOffset, unevenOffset, targetSlide;
-	    var _props = this.props;
-	    var slidesToScroll = _props.slidesToScroll;
-	    var slidesToShow = _props.slidesToShow;
-	    var _state = this.state;
-	    var slideCount = _state.slideCount;
-	    var currentSlide = _state.currentSlide;
+	    var _props = this.props,
+	        slidesToScroll = _props.slidesToScroll,
+	        slidesToShow = _props.slidesToShow;
+	    var _state = this.state,
+	        slideCount = _state.slideCount,
+	        currentSlide = _state.currentSlide;
 
 	    unevenOffset = slideCount % slidesToScroll !== 0;
 	    indexOffset = unevenOffset ? 0 : (slideCount - currentSlide) % slidesToScroll;
@@ -1185,6 +1197,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  },
+	  setItemLazyList: function setItemLazyList(list, item) {
+	    console.log('setting items');
+	    if (list.indexOf(item) == -1) {
+	      list.push(item);
+	    }
+	  },
+	  getLazyLoadedList: function getLazyLoadedList(targetSlide, lazyLoadedList, props) {
+	    var _ref = props || this.props,
+	        preLoad = _ref.preLoad,
+	        slidesToShow = _ref.slidesToShow,
+	        children = _ref.children;
+
+	    var listLength = _react2.default.Children.count(children) - 1;
+
+	    if (!lazyLoadedList) {
+	      lazyLoadedList = this.state.lazyLoadedList;
+	    }
+
+	    var minDistance = targetSlide - preLoad;
+	    var maxDistance = targetSlide + slidesToShow + preLoad;
+	    var item;
+	    var currentDistance;
+
+	    do {
+	      currentDistance = minDistance;
+
+	      minDistance++;
+
+	      if (currentDistance < 0) {
+	        this.setItemLazyList(lazyLoadedList, listLength + (currentDistance + 1));
+
+	        continue;
+	      }
+
+	      if (currentDistance > listLength) {
+	        this.setItemLazyList(lazyLoadedList, 0 + (currentDistance - listLength - 1));
+
+	        continue;
+	      }
+
+	      this.setItemLazyList(lazyLoadedList, currentDistance);
+	    } while (minDistance < maxDistance);
+
+	    return lazyLoadedList;
+	  },
 	  slideHandler: function slideHandler(index) {
 	    var _this = this;
 
@@ -1216,9 +1273,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      if (this.props.lazyLoad && this.state.lazyLoadedList.indexOf(targetSlide) < 0) {
-	        this.setState({
-	          lazyLoadedList: this.state.lazyLoadedList.concat(targetSlide)
-	        });
+	        var listCount = _react2.default.Children.count(this.props.children);
+
+	        if (listCount != this.state.lazyLoadedList.length) {
+	          this.setState({
+	            lazyLoadedList: this.getLazyLoadedList(targetSlide)
+	          });
+	        }
 	      }
 
 	      callback = function callback() {
@@ -1284,19 +1345,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (this.props.beforeChange) {
 	      this.props.beforeChange(this.state.currentSlide, currentSlide);
 	    }
-
 	    if (this.props.lazyLoad) {
-	      var loaded = true;
-	      var slidesToLoad = [];
-	      for (var i = targetSlide; i < targetSlide + this.props.slidesToShow; i++) {
-	        loaded = loaded && this.state.lazyLoadedList.indexOf(i) >= 0;
-	        if (!loaded) {
-	          slidesToLoad.push(i);
-	        }
-	      }
-	      if (!loaded) {
+	      var _listCount = _react2.default.Children.count(this.props.children);
+
+	      if (_listCount != this.state.lazyLoadedList.length) {
 	        this.setState({
-	          lazyLoadedList: this.state.lazyLoadedList.concat(slidesToLoad)
+	          lazyLoadedList: this.getLazyLoadedList(targetSlide)
 	        });
 	      }
 	    }
@@ -1491,6 +1545,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    infinite: true,
 	    initialSlide: 0,
 	    lazyLoad: false,
+	    preLoad: 0,
 	    pauseOnHover: true,
 	    responsive: null,
 	    rtl: false,

@@ -134,7 +134,7 @@ var helpers = {
 
       if (currentDistance > listLength) {
         this.setItemLazyList(lazyLoadedList, 0 + (currentDistance - listLength - 1))
-        
+
         continue;
       }
 
@@ -161,7 +161,7 @@ var helpers = {
       if(this.props.infinite === false &&
         (index < 0 || index >= this.state.slideCount)) {
         return;
-      } 
+      }
 
       //  Shifting targetSlide back into the range
       if (index < 0) {
@@ -173,9 +173,13 @@ var helpers = {
       }
 
       if (this.props.lazyLoad && this.state.lazyLoadedList.indexOf(targetSlide) < 0) {
-        this.setState({
-          lazyLoadedList: this.state.lazyLoadedList.concat(targetSlide)
-        });
+        const listCount = React.Children.count(this.props.children);
+
+        if (listCount != this.state.lazyLoadedList.length) {
+          this.setState({
+            lazyLoadedList: this.getLazyLoadedList(targetSlide)
+          });
+        }
       }
 
       callback = () => {
@@ -241,7 +245,6 @@ var helpers = {
     if (this.props.beforeChange) {
       this.props.beforeChange(this.state.currentSlide, currentSlide);
     }
-
     if (this.props.lazyLoad) {
       const listCount = React.Children.count(this.props.children);
 
