@@ -314,7 +314,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  },
 	  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-	    console.log('receieving props');
 	    // lazyLoad
 	    if (nextProps.lazyLoad && nextProps.preLoad != this.props.preLoad) {
 	      this.setState({
@@ -353,11 +352,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  },
 	  slickPrev: function slickPrev() {
-	    console.log('prev');
 	    this.changeSlide({ message: 'previous' });
 	  },
 	  slickNext: function slickNext() {
-	    console.log('next');
 	    this.changeSlide({ message: 'next' });
 	  },
 	  slickGoTo: function slickGoTo(slide) {
@@ -1198,7 +1195,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  },
 	  setItemLazyList: function setItemLazyList(list, item) {
-	    console.log('setting items');
 	    if (list.indexOf(item) == -1) {
 	      list.push(item);
 	    }
